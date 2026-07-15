@@ -42,6 +42,7 @@ type Server struct {
 	Switcher    *switcher.Switcher
 	Assets      embed.FS
 	ActualPort  int
+	OnQuit      func()
 	onChanged   func()
 }
 
@@ -98,6 +99,7 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/api/backups", s.handleBackups)
 	mux.HandleFunc("/api/backups/", s.handleBackupByFile)
 	mux.HandleFunc("/api/settings", s.handleSettings)
+	mux.HandleFunc("/api/app/quit", s.handleAppQuit)
 	mux.HandleFunc("/api/models/fetch", s.handleFetchModels)
 	mux.HandleFunc("/api/connection/test", s.handleConnectionTest)
 	mux.HandleFunc("/api/config", s.handleConfig)
@@ -112,6 +114,19 @@ func (s *Server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/grok/v1", s.handleGrokProxy)
 	mux.HandleFunc("/grok/v1/", s.handleGrokProxy)
 	mux.HandleFunc("/", s.handleStatic)
+}
+
+func (s *Server) handleAppQuit(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		methodNotAllowed(w)
+		return
+	}
+	if s.OnQuit == nil {
+		writeError(w, fmt.Errorf("退出服务不可用"), http.StatusServiceUnavailable)
+		return
+	}
+	writeJSON(w, map[string]bool{"ok": true})
+	go s.OnQuit()
 }
 
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {

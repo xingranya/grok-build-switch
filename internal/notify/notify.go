@@ -26,6 +26,23 @@ func Info(title, message string) {
 	}
 }
 
+// Alert 同步显示关键错误，确保应用退出前用户能看到失败原因。
+func Alert(title, message string) {
+	title = sanitize(title)
+	message = sanitize(message)
+	if title == "" {
+		title = "Grok Build Switch"
+	}
+	if runtime.GOOS != "darwin" {
+		Info(title, message)
+		return
+	}
+	script := `on run argv
+display alert (item 1 of argv) message (item 2 of argv) as critical
+end run`
+	_ = exec.Command("osascript", "-e", script, title, message).Run()
+}
+
 func OpenPath(path string) error {
 	if path == "" {
 		return fmt.Errorf("empty path")

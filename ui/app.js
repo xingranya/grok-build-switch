@@ -1406,6 +1406,13 @@ $("settingsForm").onsubmit = (event) => {
   }, { button: $("saveSettingsBtn"), busyLabel: "保存中…", success: "设置已保存" });
 };
 
+$("quitAppBtn").onclick = () => {
+  if (!window.confirm("确定退出 Grok Build Switch？")) return;
+  run(async () => {
+    await api("/api/app/quit", { method: "POST" });
+  }, { button: $("quitAppBtn"), busyLabel: "正在退出…", success: "应用正在退出" });
+};
+
 $("importGrokAuthBtn").onclick = () => $("grokAuthFile").click();
 $("grokAuthFile").onchange = async (event) => {
   const file = event.target.files?.[0];

@@ -54,6 +54,15 @@ func Logf(format string, args ...any) {
 	_, _ = fmt.Fprintf(f, format+"\n", args...)
 }
 
+// Flush 将当前日志立即同步到磁盘，供退出前保存最后一条错误。
+func Flush() {
+	mu.Lock()
+	defer mu.Unlock()
+	if logFile != nil {
+		_ = logFile.Sync()
+	}
+}
+
 // Guard runs fn and, on panic, records the value and stack trace to the log
 // instead of letting it crash the process silently. Use it to wrap goroutines
 // that have no recovering caller (tray clicks, background workers).

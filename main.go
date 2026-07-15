@@ -9,6 +9,8 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
+	"sync"
 	"syscall"
 	"time"
 
@@ -16,6 +18,7 @@ import (
 	"grok_switch/internal/crash"
 	"grok_switch/internal/grokauth"
 	"grok_switch/internal/grokpool"
+	"grok_switch/internal/notify"
 	"grok_switch/internal/paths"
 	"grok_switch/internal/profiles"
 	"grok_switch/internal/server"
@@ -24,15 +27,17 @@ import (
 	"grok_switch/internal/tray"
 )
 
-//go:embed ui/index.html ui/app.js ui/style.css icon.svg assets/icon.ico assets/tray_template.png
+//go:embed ui/index.html ui/app.js ui/style.css icon.svg assets/icon.ico
 var assets embed.FS
 
 func main() {
 	defer crash.RecoverMainThread()
 
-	silent := flag.Bool("silent", false, "start without opening browser")
-	noTray := flag.Bool("no-tray", false, "run http server without tray")
+	silent := flag.Bool("silent", false, "启动时不打开浏览器")
+	noTray := flag.Bool("no-tray", false, "不启用系统托盘（兼容参数）")
+	trayEnabled := flag.Bool("tray", runtime.GOOS != "darwin", "启用系统托盘；macOS 默认关闭")
 	flag.Parse()
+	useTray := shouldUseTray(*trayEnabled, *noTray)
 
 	resolved, err := paths.Resolve()
 	if err != nil {
@@ -98,6 +103,11 @@ func main() {
 		Switcher:    sw,
 		Assets:      assets,
 	}
+	quitCh := make(chan struct{})
+	var quitOnce sync.Once
+	appServer.OnQuit = func() {
+		quitOnce.Do(func() { close(quitCh) })
+	}
 	httpServer, port, err := appServer.Listen(currentSettings.Port)
 	if err != nil {
 		fatal(err)
@@ -121,7 +131,7 @@ func main() {
 		AuthFile:    filepath.Join(resolved.GrokHome, "auth.json"),
 		Assets:      assets,
 	}
-	if !*noTray {
+	if useTray {
 		appServer.SetOnChanged(trayApp.Refresh)
 	}
 
@@ -129,8 +139,8 @@ func main() {
 		_ = tray.OpenBrowser(url)
 	}
 
-	if *noTray {
-		waitForSignal()
+	if !useTray {
+		waitForExit(quitCh)
 		shutdown(httpServer)
 		return
 	}
@@ -138,10 +148,18 @@ func main() {
 	shutdown(httpServer)
 }
 
-func waitForSignal() {
+func waitForExit(quit <-chan struct{}) {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-	<-ch
+	defer signal.Stop(ch)
+	select {
+	case <-ch:
+	case <-quit:
+	}
+}
+
+func shouldUseTray(trayEnabled, noTray bool) bool {
+	return trayEnabled && !noTray
 }
 
 func shutdown(srv interface{ Shutdown(context.Context) error }) {
@@ -151,6 +169,9 @@ func shutdown(srv interface{ Shutdown(context.Context) error }) {
 }
 
 func fatal(err error) {
+	crash.Logf("fatal startup error: %v", err)
+	crash.Flush()
+	notify.Alert("Grok Build Switch 启动失败", err.Error())
 	fmt.Fprintln(os.Stderr, err)
 	os.Exit(1)
 }
