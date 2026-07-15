@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VERSION="${VERSION:-0.4.3}"
+VERSION="${VERSION:-0.4.4}"
 MIN_MACOS_VERSION="${MIN_MACOS_VERSION:-12.0}"
 GO_BIN="${GO_BIN:-go}"
 DIST_DIR="${DIST_DIR:-$ROOT_DIR/dist}"
@@ -27,7 +27,7 @@ require_command() {
 }
 
 [[ "$(uname -s)" == "Darwin" ]] || fail "macOS 构建脚本只能在 macOS 上运行"
-[[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || fail "VERSION 必须是数字版本，例如 0.4.3"
+[[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || fail "VERSION 必须是数字版本，例如 0.4.4"
 [[ "$MIN_MACOS_VERSION" =~ ^[0-9]+\.[0-9]+$ ]] || fail "MIN_MACOS_VERSION 必须是主版本和次版本，例如 12.0"
 [[ -n "$DIST_DIR" && "$DIST_DIR" != "/" ]] || fail "DIST_DIR 不能是根目录"
 

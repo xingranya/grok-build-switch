@@ -37,7 +37,7 @@ Windows 托盘与 macOS 纯后台 Web 工具：用供应商（Profile）管理 G
 
 ### macOS 安装
 
-1. 下载并解压 `Grok-Build-Switch-macos-arm64-cli-v0.4.3.zip`。
+1. 下载并解压 `Grok-Build-Switch-macos-arm64-cli-v0.4.4.zip`。
 2. 将整个 `Grok Build Switch CLI` 文件夹放到固定位置。
 3. 双击 `启动.command`，服务就绪后浏览器会自动打开本地管理页面；运行期间保留终端窗口即可，窗口可以最小化。
 4. 需要结束服务时双击 `停止.command`，也可以在“设置 → 服务”中点击“停止服务”，终端窗口随后会自动结束。
@@ -113,7 +113,7 @@ macOS 登录项位于 `~/Library/LaunchAgents/com.grokbuildswitch.app.plist`。�
 产物：
 
 - `dist/Grok Build Switch CLI/`
-- `dist/Grok-Build-Switch-macos-arm64-cli-v0.4.3.zip`
+- `dist/Grok-Build-Switch-macos-arm64-cli-v0.4.4.zip`
 
 构建会运行测试、生成 arm64 可执行文件、执行 ad-hoc 签名，并检查真实的最低系统版本。
 

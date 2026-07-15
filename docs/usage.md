@@ -10,7 +10,7 @@
 
 ### 1.下载并运行
 
-- macOS Apple Silicon：解压 `Grok-Build-Switch-macos-arm64-cli-v0.4.3.zip`，保留完整文件夹并双击 `启动.command`。
+- macOS Apple Silicon：解压 `Grok-Build-Switch-macos-arm64-cli-v0.4.4.zip`，保留完整文件夹并双击 `启动.command`。
 - Windows x64：下载并运行 `grok_switch.exe`。
 
 macOS 可执行文件使用 ad-hoc 签名。首次打开如被拦截，请按住 Control 点击 `.command` 文件，再选择“打开”。

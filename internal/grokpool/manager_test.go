@@ -12,6 +12,26 @@ import (
 	"time"
 )
 
+func TestClientForTransportUsesHTTPDefaultWhenProxyIsEmpty(t *testing.T) {
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+	defer upstream.Close()
+
+	client := clientForTransport(nil)
+	if client.Transport != nil {
+		t.Fatalf("未配置代理时应使用 net/http 默认 transport，实际为 %#v", client.Transport)
+	}
+	response, err := client.Get(upstream.URL)
+	if err != nil {
+		t.Fatalf("默认 transport 请求失败: %v", err)
+	}
+	response.Body.Close()
+	if response.StatusCode != http.StatusNoContent {
+		t.Fatalf("状态码不正确: %d", response.StatusCode)
+	}
+}
+
 func TestImportPersistsMetadataWithoutTokensAndKeepsStableKey(t *testing.T) {
 	manager, err := NewManager(t.TempDir())
 	if err != nil {

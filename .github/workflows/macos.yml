@@ -25,13 +25,13 @@ jobs:
 
       - name: Build headless CLI package
         env:
-          VERSION: "0.4.3"
+          VERSION: "0.4.4"
         run: ./scripts/build-macos-cli.sh
 
       - name: Upload macOS CLI artifact
         uses: actions/upload-artifact@v4
         with:
           name: grok-build-switch-macos-arm64-cli
-          path: dist/Grok-Build-Switch-macos-arm64-cli-v0.4.3.zip
+          path: dist/Grok-Build-Switch-macos-arm64-cli-v0.4.4.zip
           if-no-files-found: error
           retention-days: 14

@@ -66,7 +66,7 @@ stop_server() {
 trap stop_server HUP INT TERM
 trap cleanup EXIT
 
-for _ in {1..60}; do
+for _ in {1..200}; do
   if ! /bin/kill -0 "$server_pid" 2>/dev/null; then
     break
   fi
@@ -84,5 +84,9 @@ stop_server
 echo "启动失败。应用日志：$APP_LOG"
 if [[ -f "$APP_LOG" ]]; then
   /usr/bin/tail -n 20 "$APP_LOG"
+fi
+if [[ -f "$LAUNCH_LOG" ]]; then
+  echo "运行日志：$LAUNCH_LOG"
+  /usr/bin/tail -n 40 "$LAUNCH_LOG"
 fi
 exit 1
