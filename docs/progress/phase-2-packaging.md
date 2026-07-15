@@ -1,7 +1,7 @@
 # Phase 2：应用打包与使用文档
 
 **目标**：生成可双击安装和运行的 Apple Silicon `.app` 与 DMG。  
-**状态**：进行中
+**状态**：已完成
 
 ## 任务
 
@@ -19,22 +19,23 @@
   - 记忆影响：无
   - 验收：安装、Gatekeeper、自启动、数据路径和源码构建说明与真实行为一致
   - 备注：已完成；README、文档首页、使用教程和仓库链接已更新；MkDocs `--strict` 构建通过
-- [ ] **T2.3：新增 GitHub macOS 构建产物工作流**
+- [x] **T2.3：新增 GitHub macOS 构建产物工作流**
   - 优先级：P1
   - 工作量：S
   - 测试要求：YAML 语法、工作流触发和远端 artifact 验证
   - 记忆影响：记录沙箱内 `hdiutil` 限制
   - 验收：macOS runner 生成并上传 `.app` 与 DMG；本地可用 `SKIP_DMG=1` 验证 `.app`
-  - 备注：进行中
+  - 备注：已完成；Actions run `29434386031` 成功，远端验证 arm64、plist、ad-hoc 签名和 DMG，artifact 已下载
 
 ## 阶段备注
 
 - 范围限定为 arm64，不生成 Universal 2。
 - 使用 ad-hoc 签名，不要求 Developer ID 或公证凭据。
 - T2.1 因沙箱内 `hdiutil` 失败产生 1 点漂移，达到重规划阈值；新增 T2.3，剩余段 drift_score 已重置。
+- T2.3 实际工作量增加 1 级，再次达到剩余段重规划阈值；本阶段已无待办，不再拆分，直接进入 Phase 3。
 
 ## 阶段完成清单
 
-- [ ] 上述任务全部完成
-- [ ] `MASTER.md` 阶段计数已更新
-- [ ] `MASTER.md` 当前状态已切换到 Phase 3
+- [x] 上述任务全部完成
+- [x] `MASTER.md` 阶段计数已更新
+- [x] `MASTER.md` 当前状态已切换到 Phase 3
