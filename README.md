@@ -1,6 +1,6 @@
 # Grok Build Switch
 
-Windows 托盘与 macOS 本地 Web 工具：用供应商（Profile）管理 Grok CLI 的 `~/.grok/config.toml`。
+Windows 托盘与 macOS Dock 应用：用供应商（Profile）管理 Grok CLI 的 `~/.grok/config.toml`。
 
 一键切换上游 `base_url`、默认模型、联网搜索模型、subagents 与各 `[model.*]` 定义。
 
@@ -16,7 +16,7 @@ Windows 托盘与 macOS 本地 Web 工具：用供应商（Profile）管理 Grok
 - Web UI 仅监听 `127.0.0.1`（默认端口 `17878`，被占用时自动递增）
 - 可设置 Windows 开机自启或 macOS 登录时启动
 - Windows 托盘菜单：快速切换、打开面板、复制地址、打开数据/日志目录
-- macOS 默认直接运行本地 Web 面板，不初始化菜单栏组件
+- macOS 使用 Dock 应用维持本地 Web 面板，不初始化菜单栏组件
 
 ## 系统要求
 
@@ -40,7 +40,7 @@ Windows 托盘与 macOS 本地 Web 工具：用供应商（Profile）管理 Grok
 1. 下载 `Grok-Build-Switch-macos-arm64.dmg` 并打开。
 2. 将 `Grok Build Switch.app` 拖入“应用程序”。
 3. 首次启动时按住 Control 点击应用并选择“打开”；如果系统仍拦截，请在“系统设置 → 隐私与安全性”中选择“仍要打开”。
-4. 浏览器会自动打开 `http://127.0.0.1:17878/`；需要结束后台进程时，在“设置 → 应用”中点击“退出应用”。
+4. 浏览器会自动打开 `http://127.0.0.1:17878/`，Dock 会保留应用图标；可从 Dock、应用菜单或“设置 → 应用”退出。
 
 当前 macOS 版本使用 ad-hoc 签名，未进行 Apple Developer ID 公证。只应运行来自本仓库构建或你自行构建的产物。
 

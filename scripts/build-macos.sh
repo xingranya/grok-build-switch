@@ -6,8 +6,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="Grok Build Switch"
 BINARY_NAME="grok_switch"
 BUNDLE_ID="com.grokbuildswitch.app"
-VERSION="${VERSION:-0.4.1}"
+VERSION="${VERSION:-0.4.2}"
 BUILD_NUMBER="${BUILD_NUMBER:-1}"
+MIN_MACOS_VERSION="${MIN_MACOS_VERSION:-12.0}"
 GO_BIN="${GO_BIN:-go}"
 SKIP_DMG="${SKIP_DMG:-0}"
 DIST_DIR="${DIST_DIR:-$ROOT_DIR/dist}"
@@ -34,6 +35,7 @@ require_command() {
 [[ "$(uname -s)" == "Darwin" ]] || fail "macOS 构建脚本只能在 macOS 上运行"
 [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || fail "VERSION 必须是数字版本，例如 0.4.0"
 [[ "$BUILD_NUMBER" =~ ^[0-9]+$ ]] || fail "BUILD_NUMBER 必须是正整数"
+[[ "$MIN_MACOS_VERSION" =~ ^[0-9]+\.[0-9]+$ ]] || fail "MIN_MACOS_VERSION 必须是主版本和次版本，例如 12.0"
 [[ "$SKIP_DMG" == "0" || "$SKIP_DMG" == "1" ]] || fail "SKIP_DMG 只能是 0 或 1"
 [[ -n "$DIST_DIR" && "$DIST_DIR" != "/" ]] || fail "DIST_DIR 不能是根目录"
 
@@ -42,6 +44,7 @@ require_command /usr/bin/codesign
 require_command /usr/bin/ditto
 require_command /usr/bin/lipo
 require_command /usr/bin/plutil
+require_command /usr/bin/vtool
 require_command /usr/libexec/PlistBuddy
 if [[ "$SKIP_DMG" == "0" ]]; then
   require_command /usr/bin/hdiutil
@@ -61,6 +64,8 @@ echo "运行 Go 测试..."
 echo "构建 macOS arm64 应用..."
 CGO_CFLAGS_VALUE="${CGO_CFLAGS:-}"
 CGO_LDFLAGS_VALUE="${CGO_LDFLAGS:-}"
+CGO_CFLAGS_VALUE="$CGO_CFLAGS_VALUE -mmacosx-version-min=$MIN_MACOS_VERSION"
+CGO_LDFLAGS_VALUE="$CGO_LDFLAGS_VALUE -mmacosx-version-min=$MIN_MACOS_VERSION"
 if [[ "$(uname -m)" != "arm64" ]]; then
   require_command /usr/bin/clang
   CGO_CFLAGS_VALUE="$CGO_CFLAGS_VALUE -arch arm64"
@@ -68,7 +73,8 @@ if [[ "$(uname -m)" != "arm64" ]]; then
 fi
 (
   cd "$ROOT_DIR"
-  CC=/usr/bin/clang \
+  MACOSX_DEPLOYMENT_TARGET="$MIN_MACOS_VERSION" \
+    CC=/usr/bin/clang \
     CGO_ENABLED=1 \
     CGO_CFLAGS="$CGO_CFLAGS_VALUE" \
     CGO_LDFLAGS="$CGO_LDFLAGS_VALUE" \

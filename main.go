@@ -18,6 +18,7 @@ import (
 	"grok_switch/internal/crash"
 	"grok_switch/internal/grokauth"
 	"grok_switch/internal/grokpool"
+	"grok_switch/internal/macapp"
 	"grok_switch/internal/notify"
 	"grok_switch/internal/paths"
 	"grok_switch/internal/profiles"
@@ -119,6 +120,12 @@ func main() {
 		}
 	}
 	url := fmt.Sprintf("http://127.0.0.1:%d", port)
+	crash.Logf("http server listening: %s", url)
+	if runtime.GOOS == "darwin" && !useTray {
+		if err := macapp.Prepare(url); err != nil {
+			fatal(err)
+		}
+	}
 
 	trayApp := &tray.Tray{
 		Profiles:    profileStore,
@@ -140,21 +147,61 @@ func main() {
 	}
 
 	if !useTray {
-		waitForExit(quitCh)
+		var exitReason string
+		if runtime.GOOS == "darwin" {
+			exitReason = runMacApplication(quitCh)
+		} else {
+			exitReason = waitForExit(quitCh)
+		}
+		crash.Logf("application exit requested by: %s", exitReason)
 		shutdown(httpServer)
+		crash.Flush()
 		return
 	}
 	trayApp.Run()
+	crash.Logf("application exit requested by: system tray")
 	shutdown(httpServer)
+	crash.Flush()
 }
 
-func waitForExit(quit <-chan struct{}) {
+func waitForExit(quit <-chan struct{}) string {
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(ch)
 	select {
-	case <-ch:
+	case receivedSignal := <-ch:
+		return "signal " + receivedSignal.String()
 	case <-quit:
+		return "web interface"
+	}
+}
+
+func runMacApplication(quit <-chan struct{}) string {
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(signalCh)
+
+	exitReason := make(chan string, 1)
+	monitorDone := make(chan struct{})
+	go crash.Guard("macOS exit monitor", func() {
+		select {
+		case receivedSignal := <-signalCh:
+			exitReason <- "signal " + receivedSignal.String()
+		case <-quit:
+			exitReason <- "web interface"
+		case <-monitorDone:
+			return
+		}
+		macapp.RequestExit()
+	})
+
+	macapp.Run()
+	close(monitorDone)
+	select {
+	case reason := <-exitReason:
+		return reason
+	default:
+		return "Dock or Command-Q"
 	}
 }
 
