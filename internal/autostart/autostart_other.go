@@ -12,6 +12,11 @@ func Enable(exePath string, silent bool) error {
 	return fmt.Errorf("当前平台 %s 暂不支持开机自启", runtime.GOOS)
 }
 
+// EnableWithArguments 在当前平台不支持登录时启动时返回明确错误。
+func EnableWithArguments(exePath string, arguments []string) error {
+	return fmt.Errorf("当前平台 %s 暂不支持开机自启", runtime.GOOS)
+}
+
 // Disable 在不支持登录时启动的平台保持幂等。
 func Disable() error {
 	return nil
@@ -26,6 +31,14 @@ func IsEnabled() (bool, string, error) {
 func Sync(enabled bool, exePath string, silent bool) error {
 	if enabled {
 		return Enable(exePath, silent)
+	}
+	return Disable()
+}
+
+// SyncWithArguments 将带参数的期望状态同步到当前平台支持的登录项。
+func SyncWithArguments(enabled bool, exePath string, arguments []string) error {
+	if enabled {
+		return EnableWithArguments(exePath, arguments)
 	}
 	return Disable()
 }

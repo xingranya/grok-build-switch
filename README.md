@@ -1,6 +1,6 @@
 # Grok Build Switch
 
-Windows 托盘与 macOS Dock 应用：用供应商（Profile）管理 Grok CLI 的 `~/.grok/config.toml`。
+Windows 托盘与 macOS 纯后台 Web 工具：用供应商（Profile）管理 Grok CLI 的 `~/.grok/config.toml`。
 
 一键切换上游 `base_url`、默认模型、联网搜索模型、subagents 与各 `[model.*]` 定义。
 
@@ -16,7 +16,7 @@ Windows 托盘与 macOS Dock 应用：用供应商（Profile）管理 Grok CLI �
 - Web UI 仅监听 `127.0.0.1`（默认端口 `17878`，被占用时自动递增）
 - 可设置 Windows 开机自启或 macOS 登录时启动
 - Windows 托盘菜单：快速切换、打开面板、复制地址、打开数据/日志目录
-- macOS 使用 Dock 应用维持本地 Web 面板，不初始化菜单栏组件
+- macOS 使用独立 CLI 后台进程维持本地 Web 面板，不依赖 Dock 或菜单栏组件
 
 ## 系统要求
 
@@ -24,7 +24,7 @@ Windows 托盘与 macOS Dock 应用：用供应商（Profile）管理 Grok CLI �
 |------|------|
 | macOS | **macOS 12+，Apple Silicon（arm64）** |
 | Windows | **Windows 10 / 11 x64** |
-| 运行 | macOS 打开 `Grok Build Switch.app`；Windows 打开 `grok_switch.exe`，均无需安装 Go / Node |
+| 运行 | macOS 双击 `启动.command`；Windows 打开 `grok_switch.exe`，均无需安装 Go / Node |
 | 可选 | 本机已安装 [Grok CLI](https://x.ai)，配置目录默认为 `~/.grok` |
 
 ## 安装与使用
@@ -37,12 +37,12 @@ Windows 托盘与 macOS Dock 应用：用供应商（Profile）管理 Grok CLI �
 
 ### macOS 安装
 
-1. 下载 `Grok-Build-Switch-macos-arm64.dmg` 并打开。
-2. 将 `Grok Build Switch.app` 拖入“应用程序”。
-3. 首次启动时按住 Control 点击应用并选择“打开”；如果系统仍拦截，请在“系统设置 → 隐私与安全性”中选择“仍要打开”。
-4. 浏览器会自动打开 `http://127.0.0.1:17878/`，Dock 会保留应用图标；可从 Dock、应用菜单或“设置 → 应用”退出。
+1. 下载并解压 `Grok-Build-Switch-macos-arm64-cli-v0.4.3.zip`。
+2. 将整个 `Grok Build Switch CLI` 文件夹放到固定位置。
+3. 双击 `启动.command`，服务就绪后浏览器会自动打开本地管理页面；运行期间保留终端窗口即可，窗口可以最小化。
+4. 需要结束服务时双击 `停止.command`，也可以在“设置 → 服务”中点击“停止服务”，终端窗口随后会自动结束。
 
-当前 macOS 版本使用 ad-hoc 签名，未进行 Apple Developer ID 公证。只应运行来自本仓库构建或你自行构建的产物。
+首次运行如被拦截，请按住 Control 点击 `.command` 文件并选择“打开”。当前 macOS 可执行文件使用 ad-hoc 签名，未进行 Apple Developer ID 公证。
 
 ### Windows 安装
 
@@ -107,19 +107,15 @@ macOS 登录项位于 `~/Library/LaunchAgents/com.grokbuildswitch.app.plist`。�
 - Apple Silicon Mac；脚本也支持在 Intel macOS runner 上交叉编译 arm64
 
 ```bash
-./scripts/build-macos.sh
+./scripts/build-macos-cli.sh
 ```
 
 产物：
 
-- `dist/Grok Build Switch.app`
-- `dist/Grok-Build-Switch-macos-arm64.dmg`
+- `dist/Grok Build Switch CLI/`
+- `dist/Grok-Build-Switch-macos-arm64-cli-v0.4.3.zip`
 
-构建会运行测试、组装 `.app`、执行 ad-hoc 签名并验证 DMG。仅在执行环境禁止 `hdiutil` 时，可用下面的命令只验证 `.app`：
-
-```bash
-SKIP_DMG=1 ./scripts/build-macos.sh
-```
+构建会运行测试、生成 arm64 可执行文件、执行 ad-hoc 签名，并检查真实的最低系统版本。
 
 ### Windows 构建
 
@@ -137,7 +133,7 @@ SKIP_DMG=1 ./scripts/build-macos.sh
 
 ```bash
 go test ./...
-go run . -no-tray   # 仅 HTTP，无托盘（调试用）
+go run . -headless   # 仅运行本地 Web 服务
 ```
 
 ### 文档站本地预览

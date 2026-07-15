@@ -31,6 +31,15 @@ type plistEntry struct {
 
 // Enable 创建用户级 LaunchAgent，使应用在下次登录时静默启动。
 func Enable(exePath string, silent bool) error {
+	arguments := []string{}
+	if silent {
+		arguments = append(arguments, "--silent")
+	}
+	return EnableWithArguments(exePath, arguments)
+}
+
+// EnableWithArguments 创建包含指定启动参数的用户级 LaunchAgent。
+func EnableWithArguments(exePath string, arguments []string) error {
 	resolvedPath, err := filepath.Abs(strings.TrimSpace(exePath))
 	if err != nil || strings.TrimSpace(exePath) == "" {
 		return fmt.Errorf("应用程序路径无效")
@@ -41,7 +50,7 @@ func Enable(exePath string, silent bool) error {
 		return fmt.Errorf("应用程序路径不能是目录")
 	}
 
-	data, err := renderLaunchAgent(resolvedPath, silent)
+	data, err := renderLaunchAgentWithArguments(resolvedPath, arguments)
 	if err != nil {
 		return err
 	}
@@ -92,6 +101,14 @@ func Sync(enabled bool, exePath string, silent bool) error {
 	return Disable()
 }
 
+// SyncWithArguments 使用指定参数同步 macOS 用户级 LaunchAgent。
+func SyncWithArguments(enabled bool, exePath string, arguments []string) error {
+	if enabled {
+		return EnableWithArguments(exePath, arguments)
+	}
+	return Disable()
+}
+
 func launchAgentPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -105,6 +122,17 @@ func renderLaunchAgent(exePath string, silent bool) ([]byte, error) {
 	if silent {
 		arguments = append(arguments, "--silent")
 	}
+	return renderLaunchAgentArguments(arguments)
+}
+
+func renderLaunchAgentWithArguments(exePath string, arguments []string) ([]byte, error) {
+	programArguments := make([]string, 1, len(arguments)+1)
+	programArguments[0] = exePath
+	programArguments = append(programArguments, arguments...)
+	return renderLaunchAgentArguments(programArguments)
+}
+
+func renderLaunchAgentArguments(arguments []string) ([]byte, error) {
 	entries := []plistEntry{
 		{key: "Label", value: plistValue{kind: "string", text: launchAgentLabel}},
 		{key: "ProgramArguments", value: plistValue{kind: "array", items: arguments}},

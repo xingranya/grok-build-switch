@@ -21,3 +21,12 @@ func TestShouldUseTrayRespectsDefaultAndLegacyOverride(t *testing.T) {
 		})
 	}
 }
+
+func TestShouldUseMacAppSkipsDesktopLifecycleInHeadlessMode(t *testing.T) {
+	if shouldUseMacApp(false, true) {
+		t.Fatal("headless 模式不应创建桌面应用")
+	}
+	if shouldUseMacApp(true, false) {
+		t.Fatal("托盘模式不应重复创建桌面应用")
+	}
+}

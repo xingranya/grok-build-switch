@@ -14,14 +14,23 @@ const (
 )
 
 func Enable(exePath string, silent bool) error {
+	arguments := []string{}
+	if silent {
+		arguments = append(arguments, "--silent")
+	}
+	return EnableWithArguments(exePath, arguments)
+}
+
+// EnableWithArguments 使用指定参数创建 Windows 登录启动项。
+func EnableWithArguments(exePath string, arguments []string) error {
 	k, _, err := registry.CreateKey(registry.CURRENT_USER, runKey, registry.SET_VALUE)
 	if err != nil {
 		return err
 	}
 	defer k.Close()
 	value := fmt.Sprintf("%q", exePath)
-	if silent {
-		value += " --silent"
+	for _, argument := range arguments {
+		value += " " + fmt.Sprintf("%q", argument)
 	}
 	return k.SetStringValue(name, value)
 }
@@ -58,6 +67,14 @@ func IsEnabled() (bool, string, error) {
 func Sync(enabled bool, exePath string, silent bool) error {
 	if enabled {
 		return Enable(exePath, silent)
+	}
+	return Disable()
+}
+
+// SyncWithArguments 使用指定参数同步 Windows 登录启动项。
+func SyncWithArguments(enabled bool, exePath string, arguments []string) error {
+	if enabled {
+		return EnableWithArguments(exePath, arguments)
 	}
 	return Disable()
 }

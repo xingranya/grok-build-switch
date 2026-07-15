@@ -1407,10 +1407,10 @@ $("settingsForm").onsubmit = (event) => {
 };
 
 $("quitAppBtn").onclick = () => {
-  if (!window.confirm("确定退出 Grok Build Switch？")) return;
+  if (!window.confirm("确定停止 Grok Build Switch 服务？")) return;
   run(async () => {
     await api("/api/app/quit", { method: "POST" });
-  }, { button: $("quitAppBtn"), busyLabel: "正在退出…", success: "应用正在退出" });
+  }, { button: $("quitAppBtn"), busyLabel: "正在停止…", success: "服务正在停止" });
 };
 
 $("importGrokAuthBtn").onclick = () => $("grokAuthFile").click();

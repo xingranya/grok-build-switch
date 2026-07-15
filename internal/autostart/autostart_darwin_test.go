@@ -38,6 +38,21 @@ func TestRenderLaunchAgentEscapesPathAndAddsSilentArgument(t *testing.T) {
 	}
 }
 
+func TestRenderLaunchAgentAddsHeadlessArguments(t *testing.T) {
+	data, err := renderLaunchAgentWithArguments("/tmp/grok_switch", []string{"--headless", "--silent"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	arguments, err := parseProgramArguments(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"/tmp/grok_switch", "--headless", "--silent"}
+	if strings.Join(arguments, "|") != strings.Join(want, "|") {
+		t.Fatalf("启动参数不正确: got=%#v want=%#v", arguments, want)
+	}
+}
+
 func TestEnableDisableAndIsEnabledAreIdempotent(t *testing.T) {
 	home := t.TempDir()
 	t.Setenv("HOME", home)

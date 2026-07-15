@@ -10,10 +10,10 @@
 
 ### 1.下载并运行
 
-- macOS Apple Silicon：打开 `Grok-Build-Switch-macos-arm64.dmg`，将 `Grok Build Switch.app` 拖入“应用程序”，再从应用程序目录打开。
+- macOS Apple Silicon：解压 `Grok-Build-Switch-macos-arm64-cli-v0.4.3.zip`，保留完整文件夹并双击 `启动.command`。
 - Windows x64：下载并运行 `grok_switch.exe`。
 
-macOS 版本使用 ad-hoc 签名。首次打开如被拦截，请在“系统设置 → 隐私与安全性”中选择“仍要打开”。
+macOS 可执行文件使用 ad-hoc 签名。首次打开如被拦截，请按住 Control 点击 `.command` 文件，再选择“打开”。
 
 ![Windows 托盘状态](assets/images/grok_1.png)
 
@@ -44,7 +44,7 @@ macOS 版本使用 ad-hoc 签名。首次打开如被拦截，请在“系统设
 ###  7.使用 Windows 托盘快速切换
 ###  8.备份和还原配置
 
-macOS 不初始化菜单栏组件，运行期间会显示 Dock 图标。可从 Dock、应用菜单或“设置 → 应用”退出；再次点击 Dock 图标会重新打开管理界面。
+macOS 不创建 Dock 或菜单栏图标。双击 `启动.command` 可启动服务或重新打开管理页面；运行期间保留终端窗口并按需最小化。双击 `停止.command` 或在“设置 → 服务”中点击“停止服务”即可结束服务和终端窗口。
 
 ## macOS 登录时启动
 

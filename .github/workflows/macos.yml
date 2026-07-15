@@ -1,4 +1,4 @@
-name: Build macOS app
+name: Build macOS CLI
 
 on:
   workflow_dispatch:
@@ -23,18 +23,15 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Build app and DMG
+      - name: Build headless CLI package
         env:
-          VERSION: "0.4.2"
-          BUILD_NUMBER: ${{ github.run_number }}
-        run: ./scripts/build-macos.sh
+          VERSION: "0.4.3"
+        run: ./scripts/build-macos-cli.sh
 
-      - name: Upload macOS artifacts
+      - name: Upload macOS CLI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: grok-build-switch-macos-arm64
-          path: |
-            dist/Grok Build Switch.app
-            dist/Grok-Build-Switch-macos-arm64.dmg
+          name: grok-build-switch-macos-arm64-cli
+          path: dist/Grok-Build-Switch-macos-arm64-cli-v0.4.3.zip
           if-no-files-found: error
           retention-days: 14

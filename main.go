@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"grok_switch/internal/appsettings"
+	"grok_switch/internal/autostart"
 	"grok_switch/internal/crash"
 	"grok_switch/internal/grokauth"
 	"grok_switch/internal/grokpool"
@@ -37,8 +38,10 @@ func main() {
 	silent := flag.Bool("silent", false, "启动时不打开浏览器")
 	noTray := flag.Bool("no-tray", false, "不启用系统托盘（兼容参数）")
 	trayEnabled := flag.Bool("tray", runtime.GOOS != "darwin", "启用系统托盘；macOS 默认关闭")
+	headless := flag.Bool("headless", false, "不创建桌面应用，仅运行本地 Web 服务")
 	flag.Parse()
 	useTray := shouldUseTray(*trayEnabled, *noTray)
+	useMacApp := shouldUseMacApp(useTray, *headless)
 
 	resolved, err := paths.Resolve()
 	if err != nil {
@@ -59,7 +62,7 @@ func main() {
 
 	profileStore := profiles.NewStore(resolved.ProfilesFile)
 	settingsStore := settings.NewStore(resolved.SettingsFile)
-	appSettings := appsettings.New(settingsStore, exePath)
+	appSettings := newAppSettings(settingsStore, exePath, *headless)
 	grokAuthStore := grokauth.NewStore(resolved.GrokAuthFile)
 	grokPool, err := grokpool.NewManager(resolved.GrokPoolDir)
 	if err != nil {
@@ -121,7 +124,7 @@ func main() {
 	}
 	url := fmt.Sprintf("http://127.0.0.1:%d", port)
 	crash.Logf("http server listening: %s", url)
-	if runtime.GOOS == "darwin" && !useTray {
+	if useMacApp {
 		if err := macapp.Prepare(url); err != nil {
 			fatal(err)
 		}
@@ -148,7 +151,7 @@ func main() {
 
 	if !useTray {
 		var exitReason string
-		if runtime.GOOS == "darwin" {
+		if useMacApp {
 			exitReason = runMacApplication(quitCh)
 		} else {
 			exitReason = waitForExit(quitCh)
@@ -207,6 +210,23 @@ func runMacApplication(quit <-chan struct{}) string {
 
 func shouldUseTray(trayEnabled, noTray bool) bool {
 	return trayEnabled && !noTray
+}
+
+func shouldUseMacApp(useTray, headless bool) bool {
+	return runtime.GOOS == "darwin" && !useTray && !headless
+}
+
+func newAppSettings(store appsettings.Store, exePath string, headless bool) *appsettings.Service {
+	if runtime.GOOS != "darwin" || !headless {
+		return appsettings.New(store, exePath)
+	}
+	return appsettings.NewWithSync(store, exePath, func(enabled bool, path string, silent bool) error {
+		arguments := []string{"--headless"}
+		if silent {
+			arguments = append(arguments, "--silent")
+		}
+		return autostart.SyncWithArguments(enabled, path, arguments)
+	})
 }
 
 func shutdown(srv interface{ Shutdown(context.Context) error }) {

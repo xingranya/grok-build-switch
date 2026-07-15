@@ -1,0 +1,10 @@
+Grok Build Switch macOS CLI
+
+1. 将整个“Grok Build Switch CLI”文件夹放在固定位置，不要只移动其中的文件。
+2. 双击“启动.command”，服务就绪后浏览器会自动打开本地管理页面。
+3. 服务运行期间请保留启动时出现的终端窗口，该窗口可以最小化。
+4. 需要结束服务时，双击“停止.command”，也可以在网页设置中点击“停止服务”；随后终端窗口会自动结束。
+5. 数据和日志仍保存在 ~/.grok_switch，不会覆盖或删除现有供应商配置。
+
+如果 macOS 首次阻止运行，请按住 Control 点击对应的 .command 文件，再选择“打开”。
+应用日志：~/.grok_switch/grok_switch.log
