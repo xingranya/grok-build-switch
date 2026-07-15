@@ -2,8 +2,8 @@ site_name: grok_switch
 site_description: 用供应商 Profile 管理 Grok CLI 配置的本地托盘工具
 site_url: https://1parado.github.io/grok-build-switch/
 
-repo_name: 1parado/grok-build-switch
-repo_url: https://github.com/1parado/grok-build-switch
+repo_name: xingranya/grok-build-switch
+repo_url: https://github.com/xingranya/grok-build-switch
 
 theme:
   name: material

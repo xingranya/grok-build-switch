@@ -5,6 +5,8 @@ grok_switch.exe
 *.test
 *.out
 site/
+dist/
+.build-macos.*
 
 # Go
 bin/

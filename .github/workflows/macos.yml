@@ -1,0 +1,40 @@
+name: Build macOS app
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - macos-arm64
+
+permissions:
+  contents: read
+
+jobs:
+  build-macos-arm64:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build app and DMG
+        env:
+          VERSION: "0.4.0"
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: ./scripts/build-macos.sh
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: grok-build-switch-macos-arm64
+          path: |
+            dist/Grok Build Switch.app
+            dist/Grok-Build-Switch-macos-arm64.dmg
+          if-no-files-found: error
+          retention-days: 14

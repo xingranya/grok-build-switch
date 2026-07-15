@@ -13,7 +13,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -22,9 +21,10 @@ import (
 
 	"github.com/pelletier/go-toml/v2"
 
-	"grok_switch/internal/autostart"
+	"grok_switch/internal/appsettings"
 	grokconfig "grok_switch/internal/config"
 	"grok_switch/internal/grokauth"
+	"grok_switch/internal/grokcli"
 	"grok_switch/internal/grokpool"
 	"grok_switch/internal/paths"
 	"grok_switch/internal/profiles"
@@ -33,16 +33,16 @@ import (
 )
 
 type Server struct {
-	Paths      paths.Paths
-	Profiles   *profiles.Store
-	Settings   *settings.Store
-	GrokAuth   *grokauth.Store
-	GrokPool   *grokpool.Manager
-	Switcher   *switcher.Switcher
-	Assets     embed.FS
-	ExePath    string
-	ActualPort int
-	onChanged  func()
+	Paths       paths.Paths
+	Profiles    *profiles.Store
+	Settings    *settings.Store
+	AppSettings *appsettings.Service
+	GrokAuth    *grokauth.Store
+	GrokPool    *grokpool.Manager
+	Switcher    *switcher.Switcher
+	Assets      embed.FS
+	ActualPort  int
+	onChanged   func()
 }
 
 func (s *Server) SetOnChanged(fn func()) {
@@ -151,7 +151,7 @@ func (s *Server) handleOfficialActivate(w http.ResponseWriter, r *http.Request) 
 	loginRequired := false
 	if _, err := os.Stat(authFile); os.IsNotExist(err) {
 		loginRequired = true
-		if err := exec.Command("grok", "login").Start(); err != nil {
+		if err := grokcli.StartLogin(); err != nil {
 			writeError(w, fmt.Errorf("已切换到官方配置，但启动 grok login 失败: %w", err), http.StatusInternalServerError)
 			return
 		}
@@ -327,12 +327,8 @@ func (s *Server) handleSettings(w http.ResponseWriter, r *http.Request) {
 			writeError(w, err, http.StatusBadRequest)
 			return
 		}
-		updated, err := s.Settings.Update(next)
+		updated, err := s.AppSettings.Update(next)
 		if err != nil {
-			writeError(w, err, http.StatusInternalServerError)
-			return
-		}
-		if err := autostart.Sync(updated.Autostart, s.ExePath, updated.SilentAutostart); err != nil {
 			writeError(w, err, http.StatusInternalServerError)
 			return
 		}

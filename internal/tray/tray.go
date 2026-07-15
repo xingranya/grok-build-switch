@@ -10,8 +10,9 @@ import (
 
 	"fyne.io/systray"
 
-	"grok_switch/internal/autostart"
+	"grok_switch/internal/appsettings"
 	"grok_switch/internal/crash"
+	"grok_switch/internal/grokcli"
 	"grok_switch/internal/notify"
 	"grok_switch/internal/profiles"
 	"grok_switch/internal/settings"
@@ -19,15 +20,15 @@ import (
 )
 
 type Tray struct {
-	Profiles *profiles.Store
-	Settings *settings.Store
-	Switcher *switcher.Switcher
-	URL      string
-	ExePath  string
-	DataDir  string
-	LogFile  string
-	AuthFile string
-	Assets   embed.FS
+	Profiles    *profiles.Store
+	Settings    *settings.Store
+	AppSettings *appsettings.Service
+	Switcher    *switcher.Switcher
+	URL         string
+	DataDir     string
+	LogFile     string
+	AuthFile    string
+	Assets      embed.FS
 
 	refreshCh chan struct{}
 	done      chan struct{}
@@ -65,11 +66,7 @@ func (t *Tray) Refresh() {
 }
 
 func (t *Tray) onReady() {
-	if icon, err := t.Assets.ReadFile("assets/icon.ico"); err == nil {
-		systray.SetIcon(icon)
-	} else {
-		systray.SetIcon(iconData)
-	}
+	setTrayIcon(t.Assets)
 	systray.SetTitle("grok_switch")
 	t.rebuild()
 	go t.loop()
@@ -158,7 +155,7 @@ func (t *Tray) buildMenu(stop <-chan struct{}) {
 			return
 		}
 		if _, err := os.Stat(t.AuthFile); os.IsNotExist(err) {
-			if err := StartGrokLogin(); err != nil {
+			if err := grokcli.StartLogin(); err != nil {
 				crash.Logf("start grok login failed: %v", err)
 				notify.Info("grok_switch", "已切换到官方配置，请运行 grok login")
 			} else {
@@ -263,13 +260,16 @@ func (t *Tray) buildMenu(stop <-chan struct{}) {
 		if next.Autostart {
 			next.SilentAutostart = true
 		}
-		if _, err := t.Settings.Update(next); err == nil {
-			_ = autostart.Sync(next.Autostart, t.ExePath, next.SilentAutostart)
-			if next.Autostart {
-				notify.Info("grok_switch", "已开启开机自启")
-			} else {
-				notify.Info("grok_switch", "已关闭开机自启")
-			}
+		if _, err := t.AppSettings.Update(next); err != nil {
+			crash.Logf("autostart update failed: %v", err)
+			notify.Info("grok_switch", "更新开机自启失败："+err.Error())
+			t.Refresh()
+			return
+		}
+		if next.Autostart {
+			notify.Info("grok_switch", "已开启开机自启")
+		} else {
+			notify.Info("grok_switch", "已关闭开机自启")
 		}
 		t.Refresh()
 	})
@@ -307,10 +307,6 @@ func OpenBrowser(url string) error {
 		cmd = exec.Command("xdg-open", url)
 	}
 	return cmd.Start()
-}
-
-func StartGrokLogin() error {
-	return exec.Command("grok", "login").Start()
 }
 
 var iconData = []byte{

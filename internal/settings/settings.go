@@ -50,7 +50,7 @@ func (s *Store) Get() (Settings, error) {
 func (s *Store) Update(next Settings) (Settings, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	next = normalize(next)
+	next = Normalize(next)
 	if err := s.writeLocked(next); err != nil {
 		return Settings{}, err
 	}
@@ -86,11 +86,11 @@ func (s *Store) readLocked() (Settings, error) {
 			return Settings{}, fmt.Errorf("read settings: %w", err)
 		}
 	}
-	return normalize(current), nil
+	return Normalize(current), nil
 }
 
 func (s *Store) writeLocked(current Settings) error {
-	data, err := json.MarshalIndent(normalize(current), "", "  ")
+	data, err := json.MarshalIndent(Normalize(current), "", "  ")
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,8 @@ func (s *Store) writeLocked(current Settings) error {
 	return nil
 }
 
-func normalize(s Settings) Settings {
+// Normalize 补齐设置默认值并清理集合字段。
+func Normalize(s Settings) Settings {
 	if s.Port == 0 {
 		s.Port = 17878
 	}

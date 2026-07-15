@@ -8,7 +8,12 @@
 
 ## Grok Build Switch
 
-### 1.下载并运行 `grok_switch.exe`
+### 1.下载并运行
+
+- macOS Apple Silicon：打开 `Grok-Build-Switch-macos-arm64.dmg`，将 `Grok Build Switch.app` 拖入“应用程序”，再从应用程序目录打开。
+- Windows x64：下载并运行 `grok_switch.exe`。
+
+macOS 版本使用 ad-hoc 签名。首次打开如被拦截，请在“系统设置 → 隐私与安全性”中选择“仍要打开”。
 
 ![托盘状态](assets/images/grok_1.png)
 
@@ -36,6 +41,19 @@
 
 ![模型高级字段配置](assets/images/grok_7.png)
 
-###  7.使用托盘菜单快速切换
+###  7.使用托盘或菜单栏快速切换
 ###  8.备份和还原配置
 
+## macOS 登录时启动
+
+在设置页或菜单栏中开启“开机自启”后，应用会写入：
+
+```text
+~/Library/LaunchAgents/com.grokbuildswitch.app.plist
+```
+
+登录项会在下次登录时静默启动应用。关闭后会删除该文件。
+
+## macOS 找不到 Grok CLI
+
+从 Finder 启动的应用不会继承终端的完整 PATH。程序会自动检查 Homebrew、Volta 和常见用户安装目录；仍找不到时，可在启动应用前设置 `GROK_CLI` 为完整可执行文件路径。

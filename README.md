@@ -1,6 +1,6 @@
-# grok_switch
+# Grok Build Switch
 
-本地托盘工具：用供应商（Profile）管理 Grok CLI 的 `~/.grok/config.toml`。
+Windows 托盘与 macOS 菜单栏工具：用供应商（Profile）管理 Grok CLI 的 `~/.grok/config.toml`。
 
 一键切换上游 `base_url`、默认模型、联网搜索模型、subagents 与各 `[model.*]` 定义。
 
@@ -14,16 +14,17 @@
 - 导入 CPA `xai-*.json` 或 Grok CLI `auth.json`，由内嵌代理提供稳定的本地 URL/key 并自动刷新 token
 - Grok 多账号池：批量导入、定时自动巡检、健康分类、坏号自动隔离、健康号轮换与单账号回退
 - Web UI 仅监听 `127.0.0.1`（默认端口 `17878`，被占用时自动递增）
-- 可设置Windows 开机自启
+- 可设置 Windows 开机自启或 macOS 登录时启动
 - 托盘菜单：快速切换、打开面板、复制地址、打开数据/日志目录
 
 ## 系统要求
 
 | 项目 | 说明 |
 |------|------|
-| 系统 | **Windows 10 / 11 x64**（当前主要支持） |
-| 运行 | 双击 `grok_switch.exe` 即可，**无需**安装 Go / Node |
-| 可选 | 本机已安装 [Grok CLI](https://x.ai)，配置目录默认为 `%USERPROFILE%\.grok` |
+| macOS | **macOS 12+，Apple Silicon（arm64）** |
+| Windows | **Windows 10 / 11 x64** |
+| 运行 | macOS 打开 `Grok Build Switch.app`；Windows 打开 `grok_switch.exe`，均无需安装 Go / Node |
+| 可选 | 本机已安装 [Grok CLI](https://x.ai)，配置目录默认为 `~/.grok` |
 
 ## 安装与使用
 
@@ -33,16 +34,24 @@
 
 [https://1parado.github.io/grok-build-switch/](https://1parado.github.io/grok-build-switch/)
 
-### 方式一：从 Release 下载（推荐）
+### macOS 安装
 
-1. 打开本仓库的 [Releases](../../releases) 页面
-2. 下载 `grok_switch.exe`（或压缩包内的 exe）
-3. 放到任意目录，双击运行
-4. 托盘出现图标；浏览器会打开 `http://127.0.0.1:17878/`（可在设置中关闭「启动时打开面板」）
+1. 下载 `Grok-Build-Switch-macos-arm64.dmg` 并打开。
+2. 将 `Grok Build Switch.app` 拖入“应用程序”。
+3. 首次启动时按住 Control 点击应用并选择“打开”；如果系统仍拦截，请在“系统设置 → 隐私与安全性”中选择“仍要打开”。
+4. 菜单栏出现 Grok 图标后，浏览器会打开 `http://127.0.0.1:17878/`。
+
+当前 macOS 版本使用 ad-hoc 签名，未进行 Apple Developer ID 公证。只应运行来自本仓库构建或你自行构建的产物。
+
+### Windows 安装
+
+1. 打开本仓库的 [Releases](../../releases) 页面。
+2. 下载 `grok_switch.exe`。
+3. 双击运行，系统托盘出现图标后即可使用。
 
 
 
-### 方式二：从源码构建
+### 从源码构建
 
 见下方 [构建](#构建)。
 
@@ -55,7 +64,7 @@
 
 ### Grok Auth 与号池
 
-1. 打开 **设置 → Grok Auth JSON**，可导入单个 CPA `xai-*.json` 或 `%USERPROFILE%\.grok\auth.json`；该入口与下方自动巡检使用同一个号池。
+1. 打开 **设置 → Grok Auth JSON**，可导入单个 CPA `xai-*.json` 或 `~/.grok/auth.json`；该入口与下方自动巡检使用同一个号池。
 2. 需要多账号时，在 **Grok 号池自动巡检** 中一次选择多个 JSON，或用“选择目录导入”递归读取目录及子目录中的全部 `.json`；原文件不会被移动。
 3. 默认导入后立即巡检，之后每 6 小时自动巡检一次；可调整为 30–1440 分钟，并设置 1–16 并发。
 4. 巡检确认权限拒绝、免费额度用尽或认证失效后，该账号会退出代理可用集合；普通 429/网络异常不会被误隔离。
@@ -68,7 +77,8 @@
 | 变量 | 说明 |
 |------|------|
 | `GROK_CONFIG` | 指定 `config.toml` 完整路径 |
-| `GROK_HOME` | 指定 `.grok` 目录，默认 `%USERPROFILE%\.grok` |
+| `GROK_HOME` | 指定 `.grok` 目录，默认 `~/.grok` |
+| `GROK_CLI` | 指定 Grok CLI 可执行文件；用于 macOS Finder 启动环境找不到终端 PATH 时 |
 
 ## 数据与安全
 
@@ -76,29 +86,44 @@
 
 | 路径 | 内容 |
 |------|------|
-| `%USERPROFILE%\.grok\config.toml` | Grok CLI **当前生效**配置 |
-| `%USERPROFILE%\.grok_switch\profiles.json` | 供应商档案（**含 API Key 明文**） |
-| `%USERPROFILE%\.grok_switch\backups\` | config 自动备份（**含 Key**） |
-| `%USERPROFILE%\.grok_switch\settings.json` | 本工具设置 |
-| `%USERPROFILE%\.grok_switch\grok_auth.json` | 单账号 xAI OAuth 凭据与本地代理 key（**敏感**） |
-| `%USERPROFILE%\.grok_switch\grok_pool\pool.json` | 号池展示状态与巡检/代理设置（不含 token；代理 URL 可能包含认证信息） |
-| `%USERPROFILE%\.grok_switch\grok_pool\accounts\` | 号池各账号 OAuth 凭据副本（**敏感**） |
-| `%USERPROFILE%\.grok_switch\grok_switch.log` | 日志 |
+| `~/.grok/config.toml` | Grok CLI **当前生效**配置 |
+| `~/.grok_switch/profiles.json` | 供应商档案（**含 API Key 明文**） |
+| `~/.grok_switch/backups/` | config 自动备份（**含 Key**） |
+| `~/.grok_switch/settings.json` | 本工具设置 |
+| `~/.grok_switch/grok_auth.json` | 单账号 xAI OAuth 凭据与本地代理 key（**敏感**） |
+| `~/.grok_switch/grok_pool/pool.json` | 号池展示状态与巡检/代理设置（不含 token；代理 URL 可能包含认证信息） |
+| `~/.grok_switch/grok_pool/accounts/` | 号池各账号 OAuth 凭据副本（**敏感**） |
+| `~/.grok_switch/grok_switch.log` | 日志 |
+
+macOS 登录项位于 `~/Library/LaunchAgents/com.grokbuildswitch.app.plist`。应用仍使用 `~/.grok_switch`，以保持现有数据格式兼容。
 
 ## 构建
 
-### 环境
+### macOS 构建
 
-- [Go](https://go.dev/dl/) **1.22+**（`go.mod` 中版本以仓库为准；建议使用较新的稳定版）
-- Windows x64
-- 可选：`rsrc`（嵌入 exe 图标）、ImageMagick `magick`（从 svg 生成 ico）
+- [Go](https://go.dev/dl/) **1.26+**
+- Xcode Command Line Tools
+- Apple Silicon Mac；脚本也支持在 Intel macOS runner 上交叉编译 arm64
 
-```powershell
-# 可选：嵌入图标资源
-go install github.com/akavel/rsrc@latest
+```bash
+./scripts/build-macos.sh
 ```
 
-### 一键构建
+产物：
+
+- `dist/Grok Build Switch.app`
+- `dist/Grok-Build-Switch-macos-arm64.dmg`
+
+构建会运行测试、组装 `.app`、执行 ad-hoc 签名并验证 DMG。仅在执行环境禁止 `hdiutil` 时，可用下面的命令只验证 `.app`：
+
+```bash
+SKIP_DMG=1 ./scripts/build-macos.sh
+```
+
+### Windows 构建
+
+- Go 1.26+
+- 可选：`rsrc`（嵌入 EXE 图标）、ImageMagick `magick`（从 SVG 生成 ICO）
 
 ```powershell
 .\build.ps1
@@ -106,20 +131,10 @@ go install github.com/akavel/rsrc@latest
 
 会运行测试并生成 `grok_switch.exe`。
 
-### 手动构建
-
-```powershell
-go test ./...
-go build -ldflags "-s -w -H windowsgui" -o grok_switch.exe .
-```
-
-- `-H windowsgui`：无控制台黑窗
-- `-s -w`：减小体积
-
 
 ## 开发
 
-```powershell
+```bash
 go test ./...
 go run . -no-tray   # 仅 HTTP，无托盘（调试用）
 ```
@@ -128,7 +143,7 @@ go run . -no-tray   # 仅 HTTP，无托盘（调试用）
 
 文档站使用 MkDocs Material，内容位于 `docs/`：
 
-```powershell
+```bash
 uvx --with mkdocs-material mkdocs serve
 ```
 
@@ -139,12 +154,10 @@ uvx --with mkdocs-material mkdocs serve
 ```
 main.go           # 入口
 internal/         # 配置读写、供应商、HTTP、托盘
-ui/               # Web 前端（嵌入 exe）
+ui/               # Web 前端（嵌入应用二进制）
 assets/           # 图标
 docs/             # MkDocs 文档站
 ```
-
-##
 
 [使用教程](https://1parado.github.io/grok-build-switch/)
 

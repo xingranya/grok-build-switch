@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"grok_switch/internal/autostart"
+	"grok_switch/internal/appsettings"
 	"grok_switch/internal/crash"
 	"grok_switch/internal/grokauth"
 	"grok_switch/internal/grokpool"
@@ -24,7 +24,7 @@ import (
 	"grok_switch/internal/tray"
 )
 
-//go:embed ui/index.html ui/app.js ui/style.css icon.svg assets/icon.ico
+//go:embed ui/index.html ui/app.js ui/style.css icon.svg assets/icon.ico assets/tray_template.png
 var assets embed.FS
 
 func main() {
@@ -53,6 +53,7 @@ func main() {
 
 	profileStore := profiles.NewStore(resolved.ProfilesFile)
 	settingsStore := settings.NewStore(resolved.SettingsFile)
+	appSettings := appsettings.New(settingsStore, exePath)
 	grokAuthStore := grokauth.NewStore(resolved.GrokAuthFile)
 	grokPool, err := grokpool.NewManager(resolved.GrokPoolDir)
 	if err != nil {
@@ -83,19 +84,19 @@ func main() {
 	if err != nil {
 		fatal(err)
 	}
-	if err := autostart.Sync(currentSettings.Autostart, exePath, currentSettings.SilentAutostart); err != nil {
+	if err := appSettings.SyncCurrent(); err != nil {
 		crash.Logf("autostart sync failed: %v", err)
 	}
 
 	appServer := &server.Server{
-		Paths:    resolved,
-		Profiles: profileStore,
-		Settings: settingsStore,
-		GrokAuth: grokAuthStore,
-		GrokPool: grokPool,
-		Switcher: sw,
-		Assets:   assets,
-		ExePath:  exePath,
+		Paths:       resolved,
+		Profiles:    profileStore,
+		Settings:    settingsStore,
+		AppSettings: appSettings,
+		GrokAuth:    grokAuthStore,
+		GrokPool:    grokPool,
+		Switcher:    sw,
+		Assets:      assets,
 	}
 	httpServer, port, err := appServer.Listen(currentSettings.Port)
 	if err != nil {
@@ -110,15 +111,15 @@ func main() {
 	url := fmt.Sprintf("http://127.0.0.1:%d", port)
 
 	trayApp := &tray.Tray{
-		Profiles: profileStore,
-		Settings: settingsStore,
-		Switcher: sw,
-		URL:      url,
-		ExePath:  exePath,
-		DataDir:  resolved.DataDir,
-		LogFile:  resolved.LogFile,
-		AuthFile: filepath.Join(resolved.GrokHome, "auth.json"),
-		Assets:   assets,
+		Profiles:    profileStore,
+		Settings:    settingsStore,
+		AppSettings: appSettings,
+		Switcher:    sw,
+		URL:         url,
+		DataDir:     resolved.DataDir,
+		LogFile:     resolved.LogFile,
+		AuthFile:    filepath.Join(resolved.GrokHome, "auth.json"),
+		Assets:      assets,
 	}
 	if !*noTray {
 		appServer.SetOnChanged(trayApp.Refresh)
