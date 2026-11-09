@@ -2,10 +2,6 @@ name: Build macOS CLI
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - macos-arm64
 
 permissions:
   contents: read
